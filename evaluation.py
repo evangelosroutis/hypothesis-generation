@@ -3,6 +3,7 @@ from tools import CustomAgent
 import json
 import pandas as pd
 
+
 def evaluate_tool_selection(agent: CustomAgent, dataset: List[Dict[str, str]]) -> float:
     """
     Evaluate the tool selection performance of the CustomAgent.
@@ -15,6 +16,7 @@ def evaluate_tool_selection(agent: CustomAgent, dataset: List[Dict[str, str]]) -
         float: The accuracy of the tool selection.
     """
     correct_count = 0
+    results = []
 
     for data in dataset:
         question = data["question"]
@@ -25,13 +27,26 @@ def evaluate_tool_selection(agent: CustomAgent, dataset: List[Dict[str, str]]) -
             selected_tool = "disease_association" if selected_tool_func == agent.disease_association_agent.generate_response else "downstream_interaction"
         except ValueError:
             selected_tool = "none"
-
+        
         # Determine if the tool selection was correct
-        if selected_tool == label:
+        is_correct = (selected_tool == label)
+        if is_correct:
             correct_count += 1
 
+        # Append the result to the list
+        results.append({
+            "question": question,
+            "expected_label": label,
+            "predicted_label": selected_tool,
+            "is_correct": is_correct
+        })
+
     accuracy = correct_count / len(dataset)
-    return accuracy
+    
+    print(f"Accuracy={accuracy}")
+    return(pd.DataFrame(results))
+
+
 
 def evaluate_run_cypher_query(agent: CustomAgent, dataset: list, context: str) -> pd.DataFrame:
     """
