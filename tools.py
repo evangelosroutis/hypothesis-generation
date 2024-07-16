@@ -193,10 +193,10 @@ class DiseaseAssociation(BaseAgent):
         It leverages the functionalities provided by the BaseAgent class to interact with the Neo4j database
         and the OpenAI API, making it easier to generate meaningful and contextually accurate responses.
 
-        Example:
-            disease_agent = DiseaseAssociation(config_path='path_to_config.yaml')
-            response = disease_agent.generate_response("What diseases are associated with gene X?")
-            print(response)
+    Example:
+        disease_agent = DiseaseAssociation(config_path='path_to_config.yaml')
+        response = disease_agent.generate_response("What diseases are associated with gene X?")
+        print(response)
     """
     def __init__(self, uri: str, user: str, password: str, api_key: str, config_path: str):
         """
@@ -262,17 +262,17 @@ class DownstreamInteraction(BaseAgent):
         
         generate_response(question: str) -> List[List[str]]:
             Generate a response for a given question about downstream interactions by querying the graph database,
-            performing similarity searches, and formatting the results using the OpenAI API.
+            performing similarity searches and formatting the results using the OpenAI API.
 
     Usage:
         This class is designed to be instantiated and used to answer questions related to downstream interactions.
         It leverages the functionalities provided by the BaseAgent class to interact with the Neo4j database
         and the OpenAI API, making it easier to generate meaningful and contextually accurate responses.
 
-        Example:
-            downstream_agent = DownstreamInteraction(config_path='path_to_config.yaml')
-            response = downstream_agent.generate_response("What are the downstream interactions of gene Y?")
-            print(response)
+    Example:
+        downstream_agent = DownstreamInteraction(config_path='config.yaml')
+        response = downstream_agent.generate_response("What are the downstream interactions of gene Y?")
+        print(response)
     """
     vector_index = None
 
