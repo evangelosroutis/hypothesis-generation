@@ -1,0 +1,21 @@
+[
+    {"question": "What disease is PRKN associated with?", "label": "disease_association"},
+    {"question": "What are the downstream interactions of gene Y?", "label": "downstream_interaction"},
+    {"question": "Is gene GNAI1 associated with Parkinson disease?", "label": "disease_association"},
+    {"question": "What genes interact with gene SNCA downstream?", "label": "downstream_interaction"},
+    {"question": "Who won the Euro Cup in 2024?", "label": "none"}
+    {"question": "Is gene Alpha-synuclein associated with Parkinson's?", "label": "disease_association"},
+    {"question": "What downstream genes are affected by gene Z?", "label": "downstream_interaction"},
+    {"question": "What is the capital of France?", "label": "none"},
+    {"question": "What is the weather like?", "label": "none"},
+    {"question": "What would happend if Insulin is activated in the Type II diabetes mellitus pathway?", "label": "downstream_interaction"},
+    {"question": "Are there any connections between Caspace-3 and Alzheimer Disease?","label": "disease_association"},
+    {"question": "Which gene is linked to Alzheimer's disease?", "label": "disease_association"},
+    {"question": "What downstream effects does gene BCL2 have?", "label": "downstream_interaction"},
+    {"question": "Is BRCA1 associated with Colorectal cancer?", "label": "disease_association"},
+    {"question": "What pathways are activated by gene TP53?", "label": "downstream_interaction"},
+    {"question": "Is there a link between gene APP and Alzheimer's?", "label": "disease_association"},
+    {"question": "What downstream targets are influenced by gene MFN1?", "label": "downstream_interaction"},
+    {"question": "How does gene expression impact cell growth?", "label": "none"},  
+    {"question": "What environmental factors influence gene mutations?", "label": "none"}
+]
