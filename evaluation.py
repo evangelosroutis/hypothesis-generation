@@ -98,7 +98,6 @@ def evaluate_final_response(agent: CustomAgent, dataset: list, context:str) -> p
         agent (CustomAgent): The CustomAgent to be tested.
         dataset (list): List of questions and their expected Cypher queries.
         context (str): The prompt context to set for the agent.
-        llm_judge_api_key (str): API key for the LLM used as a judge.
 
     Returns:
         pd.DataFrame: DataFrame containing the questions, final responses, manual results, and correctness judgments.
@@ -107,13 +106,13 @@ def evaluate_final_response(agent: CustomAgent, dataset: list, context:str) -> p
 
     for item in dataset:
         question = item["question"]
-        expected_cypher_query = item["expected_cypher_query"].strip()
+        expected_cypher_query = item["expected_cypher_query"]
         
         # Set the appropriate context
         agent.set_prompt_context(context)
 
         # Generate the final response using the agent
-        final_response = agent.ask(question).strip()
+        final_response = agent.ask(question)
 
         # Run the expected Cypher query manually using kg.query
         manual_result = agent.kg.query(expected_cypher_query)
@@ -135,7 +134,7 @@ def evaluate_final_response(agent: CustomAgent, dataset: list, context:str) -> p
                 {"role": "user", "content": evaluation_prompt}
             ],
             temperature=0,
-            max_tokens=200
+            max_tokens=300
         )
         correctness_judgment = judge_response.choices[0].message.content.strip()
 
@@ -146,5 +145,5 @@ def evaluate_final_response(agent: CustomAgent, dataset: list, context:str) -> p
             "manual_result": json.dumps(manual_result, indent=4),
             "correctness_judgment": correctness_judgment
         })
-    
+
     return pd.DataFrame(results)
