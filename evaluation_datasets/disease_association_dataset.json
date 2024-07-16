@@ -1,0 +1,22 @@
+[
+    {
+        "question": "What diseases is INS associated with?",
+        "expected_cypher_query": "\n            MATCH (g:Gene)-[:ASSOCIATED_WITH]->(d:Disease)\n            WHERE 'INS' IN g.synonyms \n            RETURN g.names as gene_names, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway\n        "
+    },
+    {
+        "question": "What diseases is Serine/threonine-protein kinase A-Raf linked to?",
+        "expected_cypher_query": "\n            MATCH (g:Gene)-[:ASSOCIATED_WITH]->(d:Disease)\n            WHERE 'Serine/threonine-protein kinase A-Raf' IN g.names \n            RETURN g.names as gene_names, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway\n        "
+    },
+    {
+        "question": "Is PRKN associated with Alzheimer disease?",
+        "expected_cypher_query": "\n            MATCH (g:Gene)-[:ASSOCIATED_WITH]->(d:Disease)\n            WHERE 'GNAI1' IN g.synonyms AND d.name='Alzheimer disease'\n            RETURN g.names as gene_names, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway\n        "
+    },
+    {
+        "question": "Are there any connections between Colorectal cancer and gene HRAS?",
+        "expected_cypher_query": "\n            MATCH (g:Gene)-[:ASSOCIATED_WITH]->(d:Disease)\n            WHERE 'HRAS' IN g.synonyms AND d.name='Colorectal cancer'\n            RETURN g.names as gene_names, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway\n        "
+    },
+    {
+        "question": "Is gene GNAI1 associated with Parkinson disease?",
+        "expected_cypher_query": "\n            MATCH (g:Gene)-[:ASSOCIATED_WITH]->(d:Disease)\n            WHERE 'GNAI1' in g.synonyms AND d.name = 'Parkinson disease'\n            RETURN g.names as gene_names, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway\n        "
+    }
+]
