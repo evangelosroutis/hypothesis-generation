@@ -26,12 +26,12 @@ prompts:
       # 'Is gene GNAI1 associated with Parkinson disease?' 
       MATCH (g:Gene)-[:ASSOCIATED_WITH]->(d:Disease)
       WHERE 'GNAI1' IN g.synonyms AND d.name='Parkinson disease'
-      RETURN g.name as gene_name, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway
+      RETURN g.names as gene_names, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway
 
       # 'Is gene Alpha-synuclein associated with Parkinson's?' 
       MATCH (g:Gene)-[:ASSOCIATED_WITH]->(d:Disease)
       WHERE 'Alpha-synuclein' in g.names AND d.name='Parkinson disease'
-      RETURN g.name as gene_name, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway
+      RETURN g.names as gene_names, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway
 
     retry_prompt: |
       The Cypher statement below returned an error:
@@ -53,6 +53,14 @@ prompts:
       Question: {question}
       Information: {information}
       Helpful Answer:
+
+    evaluation_prompt: |
+      Given the following ground truth information:
+      {manual_result}
+      Evaluate the correctness and relevance of this response to the question '{question}':
+      {final_response}
+      Is the response correct based on the provided information? Does it address the question accurately? Answer 'yes' or 'no' and explain your reasoning.
+      If the response is along the lines 'I can't find the requested information in the database' and the ground truth information is empty, return that the response is correct.
 
   downstream_interaction:
     initial_prompt: |
@@ -153,3 +161,5 @@ prompts:
     Classify the following question:
     Question: {question}
     Category:
+
+  
