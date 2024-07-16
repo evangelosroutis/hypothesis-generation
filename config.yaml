@@ -136,6 +136,16 @@ prompts:
       definition: Binding to a sequence-specific DNA binding RNA polymerase II transcription factor, any of the factors that interact selectively and non-covalently with a specific DNA sequence in order to modulate transcription.
       aspect: Molecular Function
       start your response by 'Suppressor of cytokine signaling 6' (also known as 'Suppressor of cytokine signaling 7', 'Suppressor of cytokine signaling 4') interacts with Thioredoxin (also known as 'Thioredoxin, mitochondrial', 'Histone-lysine N-methyltransferase 2B') via ...
+    
+    evaluation_prompt: |
+      You are given the following ground truth information containing a list of paths of interactions of genes. Each path contains information about each interaction: pay close attention to the start node names, end node names, the type and subtype of the interaction.
+      {manual_result}
+      The following response contains information about paths and the interactions within each path. 
+      {final_response}
+      The information in the response will contain information not present in the ground truth. DO NOT assess if the response contains information that is not found in the ground truth.
+      INSTEAD, you need to assess if the information in the response makes sense or clashes with the information from the ground truth.
+      First, make sure the interactions on either side pertain to the same genes by checking their names. Next, check the subtype and type on the ground truth side such as activation/inhibition/phosphorylation etc and the names of the genes in the interaction. 
+      Does the description fit in the context of the type of interaction in the ground truth? Give a SHORT overall assessment NO MORE than 100 words and a SCORE for alignment.
 
   classification_prompt: |
     Classify the following questions into one of the categories: 'disease association' or 'downstream interaction'.
