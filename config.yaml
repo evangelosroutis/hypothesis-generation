@@ -1,0 +1,155 @@
+aspect_dict:
+  P: "Biological Process"
+  F: "Molecular Function"
+  C: "Cellular Component"
+
+interaction_type_dict:
+  ECrel: "enzyme-enzyme relation, indicating two enzymes catalyzing successive reaction steps"
+  PPrel: "protein-protein interaction, such as binding and modification"
+  GErel: "gene expression interaction, indicating relation of transcription factor and target gene product"
+  PCrel: "protein-compound interaction"
+  maplink: "link to another map"
+
+prompts:
+  disease_association:
+    initial_prompt: |
+      Task: Generate Cypher queries to query a graph database containing genes and their potential associations to diseases.
+      Instructions:
+      Don't assume you will be always be given a gene name in the query. You may be given a gene symbol, so make sure you search in the synonyms properties of the gene in the database.
+      Use only the provided relationship types and properties in the schema.
+      Do not include any explanations or apologies in your responses.
+      Do not include any text except from the generated Cypher query. 
+      Do not produce the word cypher in front of the query.
+      Schema:
+      {schema}
+      Examples:
+      # 'Is gene GNAI1 associated with Parkinson disease?' 
+      MATCH (g:Gene)-[:ASSOCIATED_WITH]->(d:Disease)
+      WHERE 'GNAI1' IN g.synonyms AND d.name='Parkinson disease'
+      RETURN g.name as gene_name, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway
+
+      # 'Is gene Alpha-synuclein associated with Parkinson's?' 
+      MATCH (g:Gene)-[:ASSOCIATED_WITH]->(d:Disease)
+      WHERE 'Alpha-synuclein' in g.names AND d.name='Parkinson disease'
+      RETURN g.name as gene_name, g.synonyms as gene_synonyms, d.name as disease_name,  d.disease_id as KEGG_pathway
+
+    retry_prompt: |
+      The Cypher statement below returned an error:
+      {cypher_statement}
+      Error: {error_message}
+      Please provide an improved Cypher statement that works. DO NOT add any explanations or apologies! I only need the statement.
+
+    final_prompt: |
+      Human: You are an assistant that helps to form nice and human understandable answers.
+      You will be provided with information that you must use to construct an answer.
+      The provided information is authoritative, you must never doubt it or try to use your internal knowledge to correct it.
+      Make the answer sound as a response to the question. 
+      Here is an example:
+      Question: Is ADORA2 somehow connected with Parkinson disease?
+      Information: {{'gene_name':"Adenosine receptor A2a",'gene_synonyms':["ADORA2", "ADORA2A"],'disease_name':"Parkinson disease",'KEGG_pathway':"05012"}}
+      Helpful Answer: Yes ADORA2, also known as 'ADORA2A' and 'Adenosine receptor A2a' is associated with Parkinson disease. It appears in pathway 05012 of the KEGG database.
+      Follow this example when generating answers.
+      If the provided information is empty, say that you can't find the answer in the database.
+      Question: {question}
+      Information: {information}
+      Helpful Answer:
+
+  downstream_interaction:
+    initial_prompt: |
+      Task: Generate Cypher queries to predict downstream gene interactions within a graph database.
+      Instructions:
+      DO NOT assume you will be always be given a gene name in the query. You MAY be given a gene symbol, so make sure you search in the synonyms properties of the gene in the database.
+      Use only the provided relationship types and properties in the schema.
+      Do not include any explanations or apologies in your responses.
+      Do not include any text except from the generated Cypher query. 
+      Do not produce the word cypher in front of the query.
+      See ALL the examples below.
+
+      Schema:
+      {schema}
+      Examples: 
+      # What are the downstream interactions of gene E3 ubiquitin-protein ligase parkin in the Parkinson disease pathway?
+      MATCH (start: Gene)-[:ASSOCIATED_WITH]->(d:Disease {{name: 'Parkinson disease'}})
+      WHERE ('E3 ubiquitin-protein ligase parkin' IN start.names) or ('E3 ubiquitin-protein ligase parkin' IN start.synonyms)
+      CALL apoc.path.expandConfig(start, {{relationshipFilter: 'INTERACTS_WITH>',minLevel: 1, uniqueness: 'NODE_PATH',bfs: false}}) 
+      YIELD path
+      WITH path
+      WHERE NOT EXISTS {{
+          MATCH (lastNode)-[:INTERACTS_WITH]->(:Gene)
+          WHERE lastNode = last(nodes(path))
+      }}
+      WITH path, [rel IN relationships(path) | {{start: startNode(rel), end: endNode(rel), type: rel.type, subtypes: rel.subtypes}}] AS relationships
+      RETURN collect(relationships) AS interactions
+      
+      # Predict the downstream interactions of gene HM1 in the Alzheimer disease pathway.
+      MATCH (start: Gene)-[:ASSOCIATED_WITH]->(d:Disease {{name: 'Alzheimer disease'}})
+      WHERE 'HM1' IN start.synonyms
+      CALL apoc.path.expandConfig(start, {{relationshipFilter: 'INTERACTS_WITH>',minLevel: 1, uniqueness: 'NODE_PATH',bfs: false}}) 
+      YIELD path
+      WITH path
+      WHERE NOT EXISTS {{
+          MATCH (lastNode)-[:INTERACTS_WITH]->(:Gene)
+          WHERE lastNode = last(nodes(path))
+      }}
+      WITH path, [rel IN relationships(path) | {{start: startNode(rel), end: endNode(rel), type: rel.type, subtypes: rel.subtypes}}] AS relationships
+      RETURN collect(relationships) AS interactions
+      
+      # What will happen if Insulin is either activated or repressed in the Type II diabetes mellitus disease pathway? Describe the cascade of events.
+      MATCH (start: Gene)-[:ASSOCIATED_WITH]->(d:Disease {{name: 'Type II diabetes mellitus'}})
+      WHERE "Insulin" IN start.names
+      CALL apoc.path.expandConfig(start, {{relationshipFilter: 'INTERACTS_WITH>',minLevel: 1, uniqueness: 'NODE_PATH',bfs: false}}) 
+      YIELD path
+      WITH path
+      WHERE NOT EXISTS {{
+          MATCH (lastNode)-[:INTERACTS_WITH]->(:Gene)
+          WHERE lastNode = last(nodes(path))
+      }}
+      WITH path, [rel IN relationships(path) | {{start: startNode(rel), end: endNode(rel), type: rel.type, subtypes: rel.subtypes}}] AS relationships
+      RETURN collect(relationships) AS interactions
+
+    retry_prompt: |
+      The Cypher statement below returned an error:
+      {cypher_statement}
+      Error: {error_message}
+      Please provide an improved Cypher statement that works. DO NOT add any explanations or apologies! I only need the statement.
+
+    final_prompt: |
+      Human: You are an assistant that helps to form nice and human understandable answers.
+      You will be provided with information about two genes and their interaction that you must use to construct an answer.
+      The provided information is authoritative, you must never doubt it or try to use your internal knowledge to correct it.
+      The information will have form: name(s) of gene 1, name(s) of gene 2 and the description of the interaction in the form (qualifier,name,aspect)
+      Make the answer sound as a response to the question. 
+      USE ONLY the information provided and NOTHING ELSE, DO NOT make up facts.
+      DO NOT ADD any followup questions or answers.
+      For example, if you are given a question:
+      'Please describe the interaction of ['Nuclear factor erythroid 2-related factor 2', 'Heme-binding protein 1'] with ['Thioredoxin', 'Thioredoxin, mitochondrial', 'Histone-lysine N-methyltransferase 2B'] using the description 
+      qualifier: enables
+      name: RNA polymerase II-specific DNA-binding transcription factor binding
+      definition: Binding to a sequence-specific DNA binding RNA polymerase II transcription factor, any of the factors that interact selectively and non-covalently with a specific DNA sequence in order to modulate transcription.
+      aspect: Molecular Function
+      start your response by 'Suppressor of cytokine signaling 6' (also known as 'Suppressor of cytokine signaling 7', 'Suppressor of cytokine signaling 4') interacts with Thioredoxin (also known as 'Thioredoxin, mitochondrial', 'Histone-lysine N-methyltransferase 2B') via ...
+
+  classification_prompt: |
+    Classify the following questions into one of the categories: 'disease association' or 'downstream interaction'.
+
+    Question: 'What disease is PRKN associated with?'
+    Category: disease association
+
+    Question: 'What are the downstream interactions of gene Y?'
+    Category: downstream interaction
+
+    Question: 'Is gene GNAI1 associated with Parkinson disease?'
+    Category: disease association
+
+    Question: 'What genes interact with gene Insulin downstream?'
+    Category: downstream interaction
+
+    Question: 'Is gene Alpha-synuclein associated with Parkinson's?'
+    Category: disease association
+
+    Question: 'What will happend if gene Caspase-3 is either activated or repressed?'
+    Category: downstream interaction
+
+    Classify the following question:
+    Question: {question}
+    Category:
