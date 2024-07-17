@@ -5,7 +5,7 @@ import pandas as pd
 from pydantic import BaseModel, Field, ValidationError, field_validator
 from typing import List, Optional, Dict, Any
 from neo4j import GraphDatabase,Transaction
-
+from utilities.preprocessing import kegg_go_integration
 
 class GeneData(BaseModel):
     """
@@ -295,7 +295,7 @@ class KGMLGAFImporter:
             GO_ID=gene_model.GO_ID
         )
 
-    def import_data(self, kgml_files: List[str]):
+    def import_data(self, kgml_files: List[str], gaf_path:str, aspect_dict:dict):
         """
         Import data from KGML files and a merged DataFrame into the Neo4j database.
 
@@ -316,7 +316,7 @@ class KGMLGAFImporter:
                 })
 
                 #Create dataframe integrating KGML genes and associated GO terms
-                merged=kegg_go_integration(kgml_file_path,gaf_path)
+                merged=kegg_go_integration(kgml_file_path, gaf_path, aspect_dict)
 
                 # Create gene nodes and their associations with the disease
                 for _, df in merged.groupby('gene_id'):

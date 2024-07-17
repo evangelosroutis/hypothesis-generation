@@ -117,7 +117,7 @@ class BaseAgent:
         )
         return completions.choices[0].message.content
 
-    def run_cypher_query(self, cypher_statement: str, retry: bool = True) -> dict:
+    def run_cypher_query(self, cypher_statement: str, retry: bool = True, verbose: bool = False) -> dict:
         """
         Execute a Cypher query against the Neo4j database.
 
@@ -132,7 +132,8 @@ class BaseAgent:
             CypherSyntaxError: If the Cypher query has a syntax error and retry is False.
         """
         try:
-            print(cypher_statement)
+            if verbose:
+                print(cypher_statement)
             return self.kg.query(cypher_statement)
         except CypherSyntaxError as e:
             if retry:
@@ -211,7 +212,7 @@ class DiseaseAssociation(BaseAgent):
         """        
         super().__init__(uri, user, password, api_key, config_path)
         
-    def generate_response(self, question: str) -> str:
+    def generate_response(self, question: str, verbose: bool =False) -> str:
         """
         Generate a response for a given question about disease associations.
 
@@ -227,8 +228,7 @@ class DiseaseAssociation(BaseAgent):
         cypher_statement = self.generate(initial_prompt, schema=self.schema, question=question)
         
         # Execute Cypher query and get results
-        cypher_result = self.run_cypher_query(cypher_statement)
-        print(cypher_result)
+        cypher_result = self.run_cypher_query(cypher_statement, verbose=verbose)
 
         # Generate final response
         final_prompt = self.current_prompts['final_prompt']
@@ -336,10 +336,10 @@ class DownstreamInteraction(BaseAgent):
         subtype=interaction['subtypes']
         interaction_type=self.config['interaction_type_dict'].get(interaction['type'])
 
-        #form crude search query consisting of start and end node gene names, as well as (sub)type of the interaction connecting them (eg activation, inhibition etc).
+        #Form crude search query consisting of start and end node gene names, as well as (sub)type of the interaction connecting them (eg activation, inhibition etc).
         search_query = f"{start_node_names}, {subtype}, {end_node_names}, {interaction_type}"
 
-        #perform similarity search based on the search_query- filter for GO_IDs relevant to the first node.
+        #Perform similarity search based on the search_query- filter for GO_IDs in go_list.
         response = DownstreamInteraction.vector_index.similarity_search(
             search_query, k=1,
             filter={'GO_ID': {"$in": go_list}}
@@ -357,8 +357,14 @@ class DownstreamInteraction(BaseAgent):
             str: Generated response describing the interaction.
         """
         unique_id = interaction['start'].get('unique_id')
+
+        #Retrieve the list of GO_IDs that are connected to the start node
         go_list = self.get_go_ids(unique_id)
+
+        #Perform similarity search between the interaction and the go_list of GO_IDs of the first node
         interaction_description = self.perform_similarity_search(interaction,go_list)
+        
+        #Form a suitable prompt and question based on the interaction data to generate the final response.
         final_prompt = self.current_prompts['final_prompt']
         start_node_names=[interaction['start'].get('names')]
         end_node_names=[interaction['end'].get('names')]
@@ -370,7 +376,7 @@ class DownstreamInteraction(BaseAgent):
         )
         return final_response
 
-    def generate_response(self, question: str) -> List[List[str]]:
+    def generate_response(self, question: str, verbose: bool =False) -> List[List[str]]:
         """
         Generate a response for a given question about downstream interactions.
 
@@ -388,7 +394,7 @@ class DownstreamInteraction(BaseAgent):
         cypher_statement = self.generate(initial_prompt, schema=self.schema, question=question)
         
         # Execute Cypher query and get results
-        cypher_result = self.run_cypher_query(cypher_statement)
+        cypher_result = self.run_cypher_query(cypher_statement, verbose=verbose)
         
         processed_interactions = {}
         all_paths_list = []
@@ -487,7 +493,7 @@ class CustomAgent(BaseAgent):
         else:
             raise ValueError("No appropriate tool found for the given question.")
 
-    def ask(self, question: str) -> str:
+    def ask(self, question: str, verbose: bool = False) -> str:
         """
         Generate a response for a given question by selecting the appropriate tool.
 
@@ -498,6 +504,6 @@ class CustomAgent(BaseAgent):
             str: The generated response.
         """
         tool_func = self.select_tool(question)
-        return tool_func(question)
+        return tool_func(question, verbose=verbose)
 
 

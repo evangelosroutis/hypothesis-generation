@@ -19,9 +19,9 @@ def get_go_term_description(go_id):
         response = requests.get(url)
         response.raise_for_status()  # Raise an HTTPError for bad responses
         data = response.json()  
-        return {'label': data.get('label'), 'definition': data.get('definition')}
+        return {'GO_label': data.get('label'), 'GO_definition': data.get('definition')}
     except (requests.exceptions.HTTPError, requests.exceptions.RequestException, ValueError) as e:
-        return {'label': None, 'definition': None}
+        return {'GO_label': None, 'GO_definition': None}
 
 
 def kegg_symbols_and_names(url):
@@ -173,7 +173,7 @@ def go_id_description(df:pd.DataFrame)->pd.DataFrame:
     return go_ddf.compute()
 
 
-def kegg_go_integration(kgml_path: str, gaf_path: str) -> pd.DataFrame:
+def kegg_go_integration(kgml_path: str, gaf_path: str, aspect_dict:dict) -> pd.DataFrame:
     """
     Integrates KEGG and GO data.
 

@@ -1,3 +1,18 @@
+kgml:
+  directory: data/KGML
+  files:
+    - hsa04930.xml
+    - hsa05010.xml
+    - hsa05012.xml
+    - hsa05210.xml
+
+gaf_path: data/GAF/goa_human.gaf
+
+evaluation:
+  tool_selection_path: evaluation_datasets/tool_selection_dataset.json
+  disease_association_path: evaluation_datasets/disease_association_dataset.json
+  downstream_interaction_path: evaluation_datasets/downstream_interaction_dataset.json
+
 aspect_dict:
   P: "Biological Process"
   F: "Molecular Function"
