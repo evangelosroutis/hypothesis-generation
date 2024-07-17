@@ -46,6 +46,10 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+#load config
+with open('config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
+    
 #Load and define global variables
 uri = os.getenv('NEO4J_URI')
 user = os.getenv('NEO4J_USER')
