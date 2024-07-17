@@ -66,7 +66,6 @@ You can evaluate the tool selection process and the correctness of the Cypher qu
 
 Tool Selection Evaluation
 ```python
-Copy code
 from evaluation import evaluate_tool_selection
 
 dataset = [
