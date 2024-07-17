@@ -5,6 +5,7 @@ Hypothesis Generation is a Python project designed to interact with a Neo4j grap
 ## Table of Contents
 
 - [Installation](#installation)
+- [Data Importer Overview](#dataimporter)
 - [Tools Overview](#tools)
 - [Evaluation Overview](#evaluation)
 - [Usage](#usage)
@@ -31,6 +32,165 @@ Hypothesis Generation is a Python project designed to interact with a Neo4j grap
     NEO4J_USER=your_neo4j_username
     NEO4J_PASSWORD=your_neo4j_password
     ```
+
+
+## Data Importer Overview
+
+The `data_importer.py` module's purpose is to import data from KGML and GAF files into a Neo4j graph database. This script utilizes the Neo4j Python driver, Pydantic models for data validation, and custom utility functions for preprocessing. The primary class in this module, `KGMLGAFImporter`, provides methods for creating nodes and relationships in the Neo4j database based on gene-disease associations and gene-gene interactions.
+
+### Classes and Methods
+
+#### GeneData (Pydantic Model)
+
+**Purpose**:
+Represents and validates gene data, handling default values and NaN values.
+
+**Attributes**:
+- `gene_id`: Unique identifier for the gene.
+- `Qualifier`: Qualifier for the gene annotation.
+- `GO_ID`: Gene Ontology ID.
+- `Aspect`: Aspect of the gene ontology.
+- `DB_Object_Type`: Type of the database object.
+- `DB_Object_Name`: List of names for the database object.
+- `DB_Object_Synonym`: List of synonyms for the database object.
+- `GO_label`: Label for the Gene Ontology term.
+- `GO_definition`: Definition for the Gene Ontology term.
+
+#### Disease (Pydantic Model)
+
+**Purpose**:
+Represents and validates disease data.
+
+**Attributes**:
+- `disease_id`: Unique identifier for the disease.
+- `name`: Name of the disease.
+
+#### GeneInteraction (Pydantic Model)
+
+**Purpose**:
+Represents and validates gene interaction data.
+
+**Attributes**:
+- `entry1`: Identifier for the first gene in the interaction.
+- `entry2`: Identifier for the second gene in the interaction.
+- `type`: Type of interaction.
+- `subtypes`: List of subtypes for the interaction.
+
+### KGMLGAFImporter (Class)
+
+**Purpose**:
+Handles the import of KGML and GAF data into a Neo4j database, creating necessary nodes and relationships.
+
+**Methods**:
+
+- `__init__(self, driver: GraphDatabase.driver)`:
+  Initializes the importer with a Neo4j driver.
+  
+  **Args**:
+  - `driver`: Neo4j driver for database connection.
+
+- `close(self)`:
+  Closes the Neo4j driver connection.
+
+- `create_gene_node(self, tx: Transaction, gene: Dict[str, Any], disease_id: str)`:
+  Creates a Gene node in the Neo4j database.
+
+  **Args**:
+  - `tx`: Neo4j transaction object.
+  - `gene`: Dictionary containing gene data.
+  - `disease_id`: ID of the associated disease.
+
+- `create_disease_node(self, tx: Transaction, disease: Dict[str, Any])`:
+  Creates a Disease node in the Neo4j database.
+
+  **Args**:
+  - `tx`: Neo4j transaction object.
+  - `disease`: Dictionary containing disease data.
+
+- `create_go_node(self, tx: Transaction, gene: Dict[str, Any])`:
+  Creates a GO Annotation node in the Neo4j database.
+
+  **Args**:
+  - `tx`: Neo4j transaction object.
+  - `gene`: Dictionary containing gene data.
+
+- `create_gene_interaction(self, tx: Transaction, interaction: Dict[str, Any], disease_id: str)`:
+  Creates an INTERACTS_WITH relationship between Gene nodes in the Neo4j database.
+
+  **Args**:
+  - `tx`: Neo4j transaction object.
+  - `interaction`: Dictionary containing interaction data.
+  - `disease_id`: ID of the associated disease.
+
+- `create_disease_association(self, tx: Transaction, gene: Dict[str, Any], disease_id: str, evidence: str)`:
+  Creates an ASSOCIATED_WITH relationship between Gene and Disease nodes in the Neo4j database.
+
+  **Args**:
+  - `tx`: Neo4j transaction object.
+  - `gene`: Dictionary containing gene data.
+  - `disease_id`: ID of the associated disease.
+  - `evidence`: Evidence for the association.
+
+- `create_go_association(self, tx: Transaction, gene: Dict[str, Any], disease_id: str)`:
+  Creates a HAS_GO_ANNOTATION relationship between Gene and GO Annotation nodes in the Neo4j database.
+
+  **Args**:
+  - `tx`: Neo4j transaction object.
+  - `gene`: Dictionary containing gene data.
+  - `disease_id`: ID of the associated disease.
+
+- `import_data(self, kgml_files: List[str], gaf_path: str, aspect_dict: dict)`:
+  Imports data from KGML files and a merged DataFrame into the Neo4j database.
+
+  **Args**:
+  - `kgml_files`: List of file paths to KGML files.
+  - `gaf_path`: Path to the GAF file.
+  - `aspect_dict`: Dictionary for mapping aspects.
+
+**Example Usage**:
+```python
+from neo4j import GraphDatabase
+from data_importer import KGMLGAFImporter
+
+# Connect to the Neo4j database
+uri = "bolt://localhost:7687"
+user = "your_neo4j_username"
+password = "your_neo4j_password"
+
+# Initialize the Neo4j driver
+driver = GraphDatabase.driver(uri, auth=(user, password))
+
+# Define KGML files and GAF file path
+kgml_files = [
+    'data/KGML/hsa04930.xml',
+    'data/KGML/hsa05010.xml',
+    'data/KGML/hsa05012.xml',
+    'data/KGML/hsa05210.xml'
+]
+gaf_path = 'data/GAF/goa_human.gaf'
+aspect_dict = {"P": "biological_process", "F": "molecular_function", "C": "cellular_component"}
+
+# Import data
+importer = KGMLGAFImporter(driver)
+importer.import_data(kgml_files, gaf_path, aspect_dict)
+
+# Close the connection
+importer.close()
+```
+
+### Benefits of `data_importer.py`
+
+1. **Structured Data Import**:
+   - Provides a systematic approach to importing complex biological data into a Neo4j database, ensuring data integrity and consistency.
+   
+2. **Validation and Error Handling**:
+   - Uses Pydantic models to validate data, handle default values, and manage NaN values, reducing the risk of data corruption.
+
+3. **Reusability and Maintainability**:
+   - Encapsulates data import logic in a class with well-defined methods, making the codebase easier to maintain and extend.
+
+4. **Enhanced Query Capabilities**:
+   - By structuring data in a graph database, it allows for complex queries and analyses that can reveal insights into gene-disease associations and gene-gene interactions.
 
 
 ## Tools Overview
@@ -251,7 +411,7 @@ print(df)
 2. **Debugging and Improvement**: Identifies areas where the agent's performance can be improved by highlighting discrepancies between the expected and actual results.
 3. **Transparency and Reliability**: Enhances the reliability of the agents by systematically evaluating their outputs against known benchmarks.
 4. **Comparison to Off-the-Shelf Solutions**:
- - Allows for detailed inspection and evaluation of each step in the query and response generation process, which is crucial for scientific and industrial applications where accuracy and precision are paramount.
+ - Allows for detailed inspection and evaluation of each step in the query and response generation process.
 
 The `evaluation.py` module is an essential part of ensuring the custom agents developed in this project are accurate, reliable, and performant.
 
