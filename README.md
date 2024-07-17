@@ -5,8 +5,8 @@ Hypothesis Generation is a Python project designed to interact with a Neo4j grap
 ## Table of Contents
 
 - [Installation](#installation)
+- [Tools overview](#toolsoverview)
 - [Usage](#usage)
-- [Tools overview](#examples)
 
 ## Installation
 
@@ -30,6 +30,105 @@ Hypothesis Generation is a Python project designed to interact with a Neo4j grap
     NEO4J_USER=your_neo4j_username
     NEO4J_PASSWORD=your_neo4j_password
     ```
+
+
+## Tools Overview
+
+The `tools.py` module is a core component of this project, designed to provide a flexible and powerful system for querying a Neo4j graph database and generating responses using OpenAI's API. This module includes several classes that together form a system for interacting with a Neo4j database and generating intelligent responses to questions about gene interactions.
+
+### Classes
+
+#### 1. BaseAgent
+
+**Purpose**: 
+The `BaseAgent` class serves as the foundational class for interacting with a Neo4j graph database and generating responses using the OpenAI API. 
+
+**Key Functionalities**:
+- **Connecting to Neo4j**: Connects to a Neo4j graph database using provided credentials.
+- **Configuration Management**: Loads configuration settings from a YAML file.
+- **Query Generation and Execution**: Generates and executes Cypher queries.
+- **Error Handling**: Handles retries for Cypher queries with syntax errors by generating corrected queries.
+- **Prompt Formatting**: Formats and sends prompts to the OpenAI API to generate responses based on the data retrieved from the database.
+
+**Methods**:
+- `load_config(path: str) -> dict`: Loads configuration settings from a YAML file.
+- `generate(prompt_template: str, temperature: float = 0, **kwargs) -> str`: Generates a response using the OpenAI API based on a given prompt template and additional arguments.
+- `run_cypher_query(cypher_statement: str, retry: bool = True, verbose: bool = False) -> dict`: Executes a Cypher query against the Neo4j database and handles retries in case of syntax errors.
+- `generate_cypher_retry(cypher_statement: str, error_message: str) -> str`: Generates a corrected Cypher query in case of a syntax error.
+- `set_prompt_context(context: str)`: Sets the current prompt context based on the configuration settings.
+
+#### 2. DiseaseAssociation
+
+**Purpose**:
+The `DiseaseAssociation` class extends the `BaseAgent` class to handle specific queries related to disease-gene associations in a Neo4j graph database.
+
+**Key Functionalities**:
+- **Context Setting**: Sets the context for disease association-related prompts.
+- **Query Generation**: Generates initial Cypher statements to query the graph database.
+- **Data Retrieval**: Executes Cypher queries to fetch disease association data.
+- **Response Generation**: Generates responses using the OpenAI API based on the queried data and predefined prompt templates.
+
+**Methods**:
+- `generate_response(question: str, verbose: bool = False) -> str`: Generates a response for a given question about disease associations by querying the graph database and formatting the result using OpenAI.
+
+#### 3. DownstreamInteraction
+
+**Purpose**:
+The `DownstreamInteraction` class extends the `BaseAgent` class to handle specific queries related to downstream interactions in a Neo4j graph database.
+
+**Key Functionalities**:
+- **Context Setting**: Sets the context for downstream interaction-related prompts.
+- **Query Generation**: Generates initial Cypher statements to query the graph database.
+- **Data Retrieval**: Executes Cypher queries to fetch downstream interaction data.
+- **Similarity Search**: Performs similarity searches to enhance interaction descriptions.
+- **Response Generation**: Generates responses using the OpenAI API based on the queried data and predefined prompt templates.
+
+**Methods**:
+- `get_go_ids(unique_id: str) -> List[str]`: Retrieves GO IDs associated with a gene unique ID.
+- `perform_similarity_search(interaction: Dict[str, Any], go_list: List[str]) -> str`: Performs a similarity search using the interaction details and GO IDs.
+- `process_interaction(interaction: Dict[str, Any]) -> str`: Processes an interaction to generate a descriptive response.
+- `generate_response(question: str, verbose: bool = False) -> List[List[str]]`: Generates a response for a given question about downstream interactions by querying the graph database, performing similarity searches, and formatting the results using the OpenAI API.
+
+#### 4. CustomAgent
+
+**Purpose**:
+The `CustomAgent` class inherits from `BaseAgent` to handle questions related to disease associations and downstream interactions. It uses prompt fine-tuning and OpenAI to classify questions and selects the appropriate tool (`DiseaseAssociation` or `DownstreamInteraction`) to generate responses.
+
+**Methods**:
+- `classify_question(question: str) -> str`: Uses OpenAI to classify questions and determine which tool to use.
+- `select_tool(question: str) -> Callable[[str], str]`: Selects the appropriate tool based on the classified question.
+- `ask(question: str, verbose: bool = False) -> str`: Routes the question to the selected method and returns the response.
+
+**Example Usage**:
+```python
+from custom_agent import CustomAgent
+
+# Load environment variables
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+uri = os.getenv('NEO4J_URI')
+user = os.getenv('NEO4J_USER')
+password = os.getenv('NEO4J_PASSWORD')
+api_key = os.getenv('OPENAI_API_KEY')
+config_path = 'config.yaml'
+
+# Instantiate the custom agent
+custom_agent = CustomAgent(uri, user, password, api_key, config_path)
+
+# Ask a question
+response = custom_agent.ask("What are the downstream interactions of gene INS in the pathway Type II diabetes mellitus?")
+print(response)
+```
+
+### Benefits of `tools.py` Over Off-the-Shelf Packages
+
+1. **Customizability**: Allows fine-grained control over the querying and response generation processes, necessary for specific use cases.
+2. **Inspection**: Methods are designed to allow for detailed inspection and debugging. For example, the run_cypher_query method in BaseAgent can print the Cypher query if the verbose flag is set, facilitating debugging and query validation.
+3. **Evaluation**: Custom evaluation functions can be designed to assess the performance of the agent’s methods. This allows for precise measurement of the agent’s accuracy and reliability, which is crucial for scientific and industrial applications. We have already implemented some of those in the evaluation.py module.
+
+
 
 ## Usage
 
@@ -138,102 +237,4 @@ context='downstream_interaction'
 df = evaluate_run_cypher_query(custom_agent, dataset, context)
 print(df)
 ```
-
-## Tools Overview
-
-The `tools.py` module is a core component of this project, designed to provide a flexible and powerful system for querying a Neo4j graph database and generating responses using OpenAI's API. This module includes several classes that together form a system for interacting with a Neo4j database and generating intelligent responses to questions about gene interactions.
-
-### Classes
-
-#### 1. BaseAgent
-
-**Purpose**: 
-The `BaseAgent` class serves as the foundational class for interacting with a Neo4j graph database and generating responses using the OpenAI API. 
-
-**Key Functionalities**:
-- **Connecting to Neo4j**: Connects to a Neo4j graph database using provided credentials.
-- **Configuration Management**: Loads configuration settings from a YAML file.
-- **Query Generation and Execution**: Generates and executes Cypher queries.
-- **Error Handling**: Handles retries for Cypher queries with syntax errors by generating corrected queries.
-- **Prompt Formatting**: Formats and sends prompts to the OpenAI API to generate responses based on the data retrieved from the database.
-
-**Methods**:
-- `load_config(path: str) -> dict`: Loads configuration settings from a YAML file.
-- `generate(prompt_template: str, temperature: float = 0, **kwargs) -> str`: Generates a response using the OpenAI API based on a given prompt template and additional arguments.
-- `run_cypher_query(cypher_statement: str, retry: bool = True, verbose: bool = False) -> dict`: Executes a Cypher query against the Neo4j database and handles retries in case of syntax errors.
-- `generate_cypher_retry(cypher_statement: str, error_message: str) -> str`: Generates a corrected Cypher query in case of a syntax error.
-- `set_prompt_context(context: str)`: Sets the current prompt context based on the configuration settings.
-
-#### 2. DiseaseAssociation
-
-**Purpose**:
-The `DiseaseAssociation` class extends the `BaseAgent` class to handle specific queries related to disease-gene associations in a Neo4j graph database.
-
-**Key Functionalities**:
-- **Context Setting**: Sets the context for disease association-related prompts.
-- **Query Generation**: Generates initial Cypher statements to query the graph database.
-- **Data Retrieval**: Executes Cypher queries to fetch disease association data.
-- **Response Generation**: Generates responses using the OpenAI API based on the queried data and predefined prompt templates.
-
-**Methods**:
-- `generate_response(question: str, verbose: bool = False) -> str`: Generates a response for a given question about disease associations by querying the graph database and formatting the result using OpenAI.
-
-#### 3. DownstreamInteraction
-
-**Purpose**:
-The `DownstreamInteraction` class extends the `BaseAgent` class to handle specific queries related to downstream interactions in a Neo4j graph database.
-
-**Key Functionalities**:
-- **Context Setting**: Sets the context for downstream interaction-related prompts.
-- **Query Generation**: Generates initial Cypher statements to query the graph database.
-- **Data Retrieval**: Executes Cypher queries to fetch downstream interaction data.
-- **Similarity Search**: Performs similarity searches to enhance interaction descriptions.
-- **Response Generation**: Generates responses using the OpenAI API based on the queried data and predefined prompt templates.
-
-**Methods**:
-- `get_go_ids(unique_id: str) -> List[str]`: Retrieves GO IDs associated with a gene unique ID.
-- `perform_similarity_search(interaction: Dict[str, Any], go_list: List[str]) -> str`: Performs a similarity search using the interaction details and GO IDs.
-- `process_interaction(interaction: Dict[str, Any]) -> str`: Processes an interaction to generate a descriptive response.
-- `generate_response(question: str, verbose: bool = False) -> List[List[str]]`: Generates a response for a given question about downstream interactions by querying the graph database, performing similarity searches, and formatting the results using the OpenAI API.
-
-#### 4. CustomAgent
-
-**Purpose**:
-The `CustomAgent` class inherits from `BaseAgent` to handle questions related to disease associations and downstream interactions. It uses OpenAI to classify questions and selects the appropriate tool (`DiseaseAssociation` or `DownstreamInteraction`) to generate responses.
-
-**Methods**:
-- `classify_question(question: str) -> str`: Uses OpenAI to classify questions and determine which tool to use.
-- `select_tool(question: str) -> Callable[[str], str]`: Selects the appropriate tool based on the classified question.
-- `ask(question: str, verbose: bool = False) -> str`: Routes the question to the selected method and returns the response.
-
-**Example Usage**:
-```python
-from custom_agent import CustomAgent
-
-# Load environment variables
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
-uri = os.getenv('NEO4J_URI')
-user = os.getenv('NEO4J_USER')
-password = os.getenv('NEO4J_PASSWORD')
-api_key = os.getenv('OPENAI_API_KEY')
-config_path = 'config.yaml'
-
-# Instantiate the custom agent
-custom_agent = CustomAgent(uri, user, password, api_key, config_path)
-
-# Ask a question
-response = custom_agent.ask("What are the downstream interactions of gene INS in the pathway Type II diabetes mellitus?")
-print(response)
-```
-
-### Benefits of `tools.py` Over Off-the-Shelf Packages
-
-1. **Customizability**: Allows fine-grained control over the querying and response generation processes, necessary for specific use cases.
-2. **Inspection and Evaluation:**: 
-**Inspection**: Methods are designed to allow for detailed inspection and debugging. For example, the run_cypher_query method in BaseAgent can print the Cypher query if the verbose flag is set, facilitating debugging and query validation.
-**Evaluation**: Custom evaluation functions can be designed to assess the performance of the agent’s methods. This allows for precise measurement of the agent’s accuracy and reliability, which is crucial for scientific and industrial applications. We have already implemented some of those in the evaluation.py module.
-
 
