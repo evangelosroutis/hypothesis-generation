@@ -1,6 +1,6 @@
 # Hypothesis Generation
 
-Hypothesis Generation is a Python project designed to interact with a Neo4j graph database with imported data from KEGG and GO databases and generate responses to questions about genes and their interactions using agentic techniques. It includes functionalities for querying the database, generating Cypher queries, and producing meaningful responses based on the data retrieved.
+Hypothesis Generation is a Python project designed to interact with a Neo4j graph database, where we import data from KEGG and GO databases and generate responses to questions about genes and their interactions using agentic techniques. It includes functionalities for querying the database, generating Cypher queries, and producing meaningful responses based on the data retrieved.
 
 ## Table of Contents
 
@@ -62,9 +62,9 @@ print(response)
 ```
 
 ## Evaluating the Tools
-You can evaluate the tool selection process and the correctness of the Cypher queries as follows:
+You can evaluate the tool selection process of the CustonAgent and the correctness of the Cypher queries as follows:
 
-Tool Selection Evaluation
+### Tool Selection Evaluation
 ```python
 from evaluation import evaluate_tool_selection
 
@@ -73,14 +73,13 @@ dataset = [
     {"question": "What are the downstream interactions of gene PARK7?", "label": "downstream_interaction"}
 ]
 
-accuracy, df = evaluate_tool_selection(custom_agent, dataset)
-print(f"Accuracy: {accuracy}")
+df = evaluate_tool_selection(custom_agent, dataset)
 print(df)
 ```
 
-Cypher Query Evaluation
+### Cypher Query Evaluation
 ```python
-from evaluation import evaluate_cypher_queries
+from evaluation import evaluate_run_cypher_query
 
 dataset = [
     {
@@ -101,8 +100,7 @@ dataset = [
     },
     #add more examples as needed
 ]
-
-accuracy, df = evaluate_cypher_queries(custom_agent, dataset)
-print(f"Accuracy: {accuracy}")
+context='downstream_interaction'
+df = evaluate_run_cypher_query(custom_agent, dataset, context)
 print(df)
 ```
