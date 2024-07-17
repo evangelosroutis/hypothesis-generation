@@ -76,9 +76,10 @@ dataset = [
 accuracy, df = evaluate_tool_selection(custom_agent, dataset)
 print(f"Accuracy: {accuracy}")
 print(df)
+```
+
 Cypher Query Evaluation
-python
-Copy code
+```python
 from evaluation import evaluate_cypher_queries
 
 dataset = [
