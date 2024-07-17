@@ -52,18 +52,20 @@ password = os.getenv('NEO4J_PASSWORD')
 api_key = os.getenv('OPENAI_API_KEY')
 config_path = 'config.yaml'
 
+
 # Instantiate the custom agent
 custom_agent = CustomAgent(uri, user, password, api_key, config_path)
 
 # Ask a question
 response = custom_agent.ask("What are the downstream interactions of gene INS in the pathway Type II diabetes mellitus?")
 print(response)
+```
 
-Evaluating the Tools
+## Evaluating the Tools
 You can evaluate the tool selection process and the correctness of the Cypher queries as follows:
 
 Tool Selection Evaluation
-python
+```python
 Copy code
 from evaluation import evaluate_tool_selection
 
@@ -103,3 +105,4 @@ dataset = [
 accuracy, df = evaluate_cypher_queries(custom_agent, dataset)
 print(f"Accuracy: {accuracy}")
 print(df)
+```
