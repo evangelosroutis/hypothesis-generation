@@ -6,11 +6,12 @@ Hypothesis Generation is a Python project designed to interact with a Neo4j grap
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Configuration](#configuration)
 - [Examples](#examples)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact Information](#contact-information)
+
+## Installation
 
 1. **Clone the repository**:
     ```sh
@@ -36,6 +37,36 @@ Hypothesis Generation is a Python project designed to interact with a Neo4j grap
 ## Usage
 
 ### Please refer to demo.ipynb for a detailed demonstration of how to import the data and use the agent
+
+### Import the data to Neo4j
+```python
+from neo4j import GraphDatabase
+from data_importer import KGMLGAFImporter
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+#Load and define global variables
+uri = os.getenv('NEO4J_URI')
+user = os.getenv('NEO4J_USER')
+password = os.getenv('NEO4J_PASSWORD')
+config_path = 'config.yaml'
+#dictionary from aspect symbols to their explanation, ie aspect_dict={P: "Biological Process" F: "Molecular Function" C: "Cellular Component"}
+aspect_dict=config['aspect_dict']
+#list of .xml pathway files from KEGG
+kgml_files = config['kgml']['files']
+kgml_file_paths = [os.path.join(kgml_directory, file) for file in kgml_files]
+#path to GAF file for human
+gaf_path=config['gaf_path']
+
+# Connect to the Neo4j database
+driver = GraphDatabase.driver(uri, auth=(user, password))
+
+# Import the data
+importer = KGMLGAFImporter(driver)
+importer.import_data(kgml_file_paths, gaf_path, aspect_dict)
+importer.close()
+```
 
 ### Running the Agent
 Here's an example of how to instantiate and use the custom agent:
