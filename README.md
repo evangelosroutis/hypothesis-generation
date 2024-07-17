@@ -35,7 +35,7 @@ Hypothesis Generation is a Python project designed to interact with a Neo4j grap
 
 ## Usage
 
-### Please refer to demo.ipynb for a detailed demonstration of how to importing the data and use the agent
+### Please refer to demo.ipynb for a detailed demonstration of how to import the data and use the agent
 
 ### Running the Agent
 Here's an example of how to instantiate and use the custom agent:
