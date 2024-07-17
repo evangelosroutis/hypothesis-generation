@@ -58,3 +58,48 @@ custom_agent = CustomAgent(uri, user, password, api_key, config_path)
 # Ask a question
 response = custom_agent.ask("What are the downstream interactions of gene INS in the pathway Type II diabetes mellitus?")
 print(response)
+
+Evaluating the Tools
+You can evaluate the tool selection process and the correctness of the Cypher queries as follows:
+
+Tool Selection Evaluation
+python
+Copy code
+from evaluation import evaluate_tool_selection
+
+dataset = [
+    {"question": "What disease is PRKN associated with?", "label": "disease_association"},
+    {"question": "What are the downstream interactions of gene PARK7?", "label": "downstream_interaction"}
+]
+
+accuracy, df = evaluate_tool_selection(custom_agent, dataset)
+print(f"Accuracy: {accuracy}")
+print(df)
+Cypher Query Evaluation
+python
+Copy code
+from evaluation import evaluate_cypher_queries
+
+dataset = [
+    {
+        "question": "What are the downstream interactions of gene PARK7?",
+        "expected_cypher_query": """
+            MATCH (start: Gene)
+            WHERE ('PARK7' IN start.names) OR ('PARK7' IN start.synonyms)
+            CALL apoc.path.expandConfig(start, {relationshipFilter: 'INTERACTS_WITH>', minLevel: 1, uniqueness: 'NODE_PATH', bfs: false}) 
+            YIELD path
+            WITH path
+            WHERE NOT EXISTS {
+                MATCH (lastNode)-[:INTERACTS_WITH]->(:Gene)
+                WHERE lastNode = last(nodes(path))
+            }
+            WITH path, [rel IN relationships(path) | {start: startNode(rel), end: endNode(rel), type: rel.type, subtypes: rel.subtypes}] AS relationships
+            RETURN collect(relationships) AS interactions
+        """
+    },
+    #add more examples as needed
+]
+
+accuracy, df = evaluate_cypher_queries(custom_agent, dataset)
+print(f"Accuracy: {accuracy}")
+print(df)
