@@ -522,5 +522,4 @@ print(df)
 4. **Comparison to Off-the-Shelf Solutions**:
  - Allows for detailed inspection and evaluation of each step in the query and response generation process.
 
-The `evaluation.py` module is an essential part of ensuring the custom agents developed in this project are accurate, reliable, and performant.
 
