@@ -39,7 +39,7 @@ Hypothesis Generation is a Python project designed to interact with a Neo4j grap
 Here's an example of how to instantiate and use the custom agent:
 
 ```python
-from custom_agent import CustomAgent
+from tools import CustomAgent
 
 # Load environment variables
 import os
