@@ -45,19 +45,6 @@ class BaseAgent:
         and OpenAI API. Subclasses can leverage the provided methods to execute database queries and generate
         meaningful responses based on those queries.
 
-    Example:
-        class DiseaseAssociation(BaseAgent):
-            def __init__(self, config_path: str):
-                super().__init__(config_path)
-            
-            def generate_response(self, question: str) -> str:
-                self.set_prompt_context('disease_association')
-                initial_prompt = self.current_prompts['initial_prompt']
-                cypher_statement = self.generate(initial_prompt, schema=self.schema, question=question)
-                cypher_result = self.run_cypher_query(cypher_statement)
-                final_prompt = self.current_prompts['final_prompt']
-                final_response = self.generate(final_prompt, question=question, information=cypher_result)
-                return final_response
     """
 
     def __init__(self, uri: str, user: str, password: str, api_key: str, config_path: str):
@@ -193,11 +180,6 @@ class DiseaseAssociation(BaseAgent):
         This class is designed to be instantiated and used to answer questions related to disease associations.
         It leverages the functionalities provided by the BaseAgent class to interact with the Neo4j database
         and the OpenAI API, making it easier to generate meaningful and contextually accurate responses.
-
-    Example:
-        disease_agent = DiseaseAssociation(config_path='path_to_config.yaml')
-        response = disease_agent.generate_response("What diseases are associated with gene X?")
-        print(response)
     """
     def __init__(self, uri: str, user: str, password: str, api_key: str, config_path: str):
         """
@@ -270,7 +252,7 @@ class DownstreamInteraction(BaseAgent):
         and the OpenAI API, making it easier to generate meaningful and contextually accurate responses.
 
     Example:
-        downstream_agent = DownstreamInteraction(config_path='config.yaml')
+        downstream_agent = DownstreamInteraction(uri, user, password, api_key, config_path='config.yaml')
         response = downstream_agent.generate_response("What are the downstream interactions of gene Y?")
         print(response)
     """
